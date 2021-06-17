@@ -17,7 +17,7 @@ class CreateAccountsTable extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->integer('balance');
+            $table->integer('balance')->default(0);
         });
     }
 
