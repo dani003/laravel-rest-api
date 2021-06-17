@@ -46,10 +46,22 @@ class EventController extends Controller
     //POST /event {"type":"withdraw", "origin":"200", "amount":10}
     //404 0
 
+    //Withdraw from existing account
+    //POST /event {"type":"withdraw", "origin":"100", "amount":5}
+    //201 {"origin": {"id":"100", "balance":15}}
+
     private function withdraw($origin, $amount)
     {
-        $account = Account::findOrFail([
-            'id' => $origin
-        ]);
+        $account = Account::findOrFail($origin);
+
+        $account->balance -= $amount;
+        $account->save(); //UPDATE
+
+        return response()->json([
+            'origin' => [
+                'id' => $account->id,
+                'balance' => $account->balance
+            ]
+        ], 201);
     }
 }
