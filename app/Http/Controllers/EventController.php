@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Account;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,12 @@ class EventController extends Controller
         } elseif ($request->input('type') === 'withdraw') {
             return $this->withdraw(
                 $request->input('origin'),
+                $request->input('amount')
+            );
+        } elseif ($request->input('type') === 'transfer') {
+            return $this->transfer(
+                $request->input('origin'),
+                $request->input('destination'),
                 $request->input('amount')
             );
         }
@@ -41,15 +48,6 @@ class EventController extends Controller
             ]
         ], 201);
     }
-
-    // Withdraw from non-existing account
-    //POST /event {"type":"withdraw", "origin":"200", "amount":10}
-    //404 0
-
-    //Withdraw from existing account
-    //POST /event {"type":"withdraw", "origin":"100", "amount":5}
-    //201 {"origin": {"id":"100", "balance":15}}
-
     private function withdraw($origin, $amount)
     {
         $account = Account::findOrFail($origin);
@@ -61,6 +59,34 @@ class EventController extends Controller
             'origin' => [
                 'id' => $account->id,
                 'balance' => $account->balance
+            ]
+        ], 201);
+    }
+
+    private function transfer($origin, $destination, $amount)
+    {
+        $accountOrigin = Account::findOrFail($origin);
+        $accountDestination = Account::firstOrCreate([
+            'id' => $destination
+        ]);
+
+        DB::transaction(function () use ($accountOrigin, $accountDestination, $amount) {
+
+            $accountOrigin->balance -= $amount;
+            $accountDestination->balance += $amount;
+
+            $accountOrigin->save(); //UPDATE
+            $accountDestination->save(); //UPDATE
+        });
+
+        return response()->json([
+            'origin' => [
+                'id' => $accountOrigin->id,
+                'balance' => $accountOrigin->balance
+            ],
+            'destination' => [
+                'id' => $accountDestination->id,
+                'balance' => $accountDestination->balance
             ]
         ], 201);
     }
