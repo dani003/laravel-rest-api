@@ -6,11 +6,11 @@ Following we have a sequence of request the will be used to test the Api
 
 # Reset state before starting tests
 
-´´´
+'''
 POST /reset
 
 200 OK
-´´´
+'''
 
 --
 # Get balance for non-existing account
